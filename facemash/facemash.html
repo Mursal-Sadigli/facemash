@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceMash</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans leading-relaxed m-0 p-0 antialiased text-center flex flex-col min-h-screen">
+    <header class="bg-slate-800 text-white py-4 px-4 shadow-md relative flex flex-col sm:block items-center justify-center">
+        <h1 class="text-2xl md:text-3xl font-bold m-0 sm:mb-1">FaceMash</h1>
+        <div class="italic opacity-80 text-sm md:text-base mt-1 sm:mt-0 mb-3 sm:mb-0">Hansı daha yaxşıdır? Sən qərar ver!</div>
+        <div class="flex gap-3 sm:absolute sm:top-4 sm:right-4 font-bold text-xs md:text-sm">
+            <a href="about.html" class="bg-blue-500 hover:bg-blue-600 text-white py-1.5 px-4 rounded-full transition-all shadow hover:shadow-lg hover:scale-105">Haqqında ℹ️</a>
+            <a href="statistika.html" class="bg-blue-500 hover:bg-blue-600 text-white py-1.5 px-4 rounded-full transition-all shadow hover:shadow-lg hover:scale-105">Statistika 📊</a>
+        </div>
+    </header>
+    
+    <div class="max-w-4xl mx-auto px-4 py-6 md:py-8 w-full flex-grow">
+        <!-- Kateqoriya seçim menyusu -->
+        <div class="mb-6 flex justify-center">
+            <select id="category-select" class="px-4 py-2 rounded-full border-2 border-blue-400 font-medium text-sm text-gray-700 bg-white cursor-pointer w-full max-w-[200px] outline-none focus:ring-2 focus:ring-blue-300 transition-shadow shadow-sm">
+                <option value="dizayn">Dizayn</option>
+                <option value="maşın">Maşın</option>
+                <option value="qız">Qızlar</option>
+                <option value="hamisi">Hamısı</option>
+            </select>
+        </div>
+        
+        <div class="flex items-center justify-center gap-2 sm:gap-6 mb-8 w-full">
+            <div class="flex-1 w-full max-w-[150px] sm:max-w-[300px] min-w-[120px] transition-transform hover:-translate-y-1">
+                <img id="image1" src="" alt="Şəkil 1" class="w-full h-40 sm:h-64 object-cover rounded-lg cursor-pointer border-4 border-white shadow-md hover:shadow-xl transition-shadow bg-gray-200">
+                <div id="rating1" class="font-bold text-slate-800 mt-2 text-sm sm:text-base"></div>
+                <button id="btn1" class="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white border-0 py-2 px-2 sm:px-4 mt-2 rounded-full cursor-pointer text-xs sm:text-sm font-bold transition-all shadow-md w-full truncate">BUNA SƏS VER 👍</button>
+            </div>
+            
+            <div class="flex items-center justify-center font-black text-xl sm:text-3xl text-red-500 min-w-[30px] sm:min-w-[50px] italic drop-shadow-sm">VS</div>
+            
+            <div class="flex-1 w-full max-w-[150px] sm:max-w-[300px] min-w-[120px] transition-transform hover:-translate-y-1">
+                <img id="image2" src="" alt="Şəkil 2" class="w-full h-40 sm:h-64 object-cover rounded-lg cursor-pointer border-4 border-white shadow-md hover:shadow-xl transition-shadow bg-gray-200">
+                <div id="rating2" class="font-bold text-slate-800 mt-2 text-sm sm:text-base"></div>
+                <button id="btn2" class="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white border-0 py-2 px-2 sm:px-4 mt-2 rounded-full cursor-pointer text-xs sm:text-sm font-bold transition-all shadow-md w-full truncate">BUNA ÜSTÜNLÜK VER 👌</button>
+            </div>
+        </div>
+        
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 mb-8 max-w-2xl mx-auto text-sm sm:text-base">
+            <p id="message" class="text-slate-700 m-0">İki şəkildən birini seçin. Daha çox seçilən qalib elan ediləcək!</p>
+            <p id="rating-change-info" class="mt-2 text-sm font-medium"></p>
+        </div>
+        
+        <!-- Yeni liderlər konteyneri - üfüqi carousellər -->
+        <div class="flex flex-col gap-8 mt-10">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 w-full hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-bold text-slate-800 border-b-2 border-blue-400 pb-2 mb-4 mt-0 text-left flex items-center gap-2">🎨 <span class="tracking-wide">Dizayn Liderləri</span></h2>
+                <div class="relative w-full">
+                    <ul id="dizayn-leaderboard" class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide text-left pl-0 list-none m-0" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <li class="py-2 text-sm sm:text-base text-gray-500 italic">Hələ heç bir səs yoxdur</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 w-full hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-bold text-slate-800 border-b-2 border-blue-400 pb-2 mb-4 mt-0 text-left flex items-center gap-2">🚗 <span class="tracking-wide">Maşın Liderləri</span></h2>
+                <div class="relative w-full">
+                    <ul id="maşın-leaderboard" class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide text-left pl-0 list-none m-0" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <li class="py-2 text-sm sm:text-base text-gray-500 italic">Hələ heç bir səs yoxdur</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 w-full hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-bold text-slate-800 border-b-2 border-blue-400 pb-2 mb-4 mt-0 text-left flex items-center gap-2">👸 <span class="tracking-wide">Qız Liderləri</span></h2>
+                <div class="relative w-full">
+                    <ul id="qız-leaderboard" class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide text-left pl-0 list-none m-0" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <li class="py-2 text-sm sm:text-base text-gray-500 italic">Hələ heç bir səs yoxdur</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="bg-slate-800 text-white py-4 mt-auto text-xs md:text-sm w-full text-center">
+        &copy; 2025 FaceMash | all rights reserved
+    </footer>
+
+    <script>
+        // Elo rating system parameters
+        const ELO = {
+            K_FACTOR: 32, // Maximum rating change per match
+            BASE_RATING: 1200, // Starting rating for new images
+            D: 400 // Rating difference divisor
+        };
+
+        let images = [];
+        
+        // Dəyişənlər
+        let currentPair = [];
+        let totalVotes = 0;
+        let currentCategory = "dizayn"; // Default kateqoriya
+        let shownImages = [];
+        
+        // Səhifə yüklənəndə
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!localStorage.getItem('facemash_visited')) {
+                localStorage.setItem('facemash_visited', 'true');
+                fetch('http://localhost:3003/updateVisitor', { method: 'POST' })
+                    .catch(err => console.error(err));
+            }
+
+            fetch('http://localhost:3003/ratings')
+              .then(response => response.json())
+      .then(data => {
+         images = data.map(img => ({...img, id: img._id}));
+         if(images.length < 2) {
+             document.getElementById('message').textContent = 'Şəkillər API-dən çəkilir... Zəhmət olmasa bir neçə saniyə sonra səhifəni yeniləyin.';
+             return;
+         }
+         getRandomPair();
+         updateAllLeaderboards();
+      })
+      .catch(error => console.error('Ratingləri çəkməkdə xəta:', error));
+
+    document.getElementById('category-select').addEventListener('change', function() {
+        currentCategory = this.value;
+        shownImages = [];
+        getRandomPair();
+    });
+
+    document.getElementById('btn1').addEventListener('click', function() {
+        if(currentPair.length) voteForImage(currentPair[0].id);
+    });
+
+    document.getElementById('btn2').addEventListener('click', function() {
+        if(currentPair.length) voteForImage(currentPair[1].id);
+    });
+});
+
+        
+        function getRandomPair() {
+            let filteredImages = images;
+            if(currentCategory !== "hamisi") {
+                filteredImages = images.filter(img => img.category === currentCategory);
+            }
+            const availableImages = filteredImages.filter(img => !shownImages.includes(img.id));
+            if(availableImages.length < 2) {
+                shownImages = [];
+                getRandomPair();
+                return;
+            }
+            const shuffled = [...availableImages].sort(() => 0.5 - Math.random());
+            currentPair = shuffled.slice(0, 2);
+            shownImages.push(currentPair[0].id, currentPair[1].id);
+            document.getElementById('image1').src = currentPair[0].url;
+            document.getElementById('image2').src = currentPair[1].url;
+            document.getElementById('rating1').textContent = `Rating: ${Math.round(currentPair[0].rating)}`;
+            document.getElementById('rating2').textContent = `Rating: ${Math.round(currentPair[1].rating)}`;
+            document.getElementById('btn1').textContent = `BUNA SƏS VER 👍`;
+            document.getElementById('btn2').textContent = `BUNA ÜSTÜNLÜK VER 👌`;
+            document.getElementById('message').textContent = 
+                "İki şəkildən birini seçin. Daha çox seçilən qalib elan ediləcək!";
+        }
+
+        function getExpectedScore(ratingA, ratingB) {
+            return 1 / (1 + Math.pow(10, (ratingB - ratingA) / ELO.D));
+        }
+
+        function calculateNewRatings(winner, loser) {
+            const expectedWinner = getExpectedScore(winner.rating, loser.rating);
+            const expectedLoser = getExpectedScore(loser.rating, winner.rating);
+            const newWinnerRating = winner.rating + ELO.K_FACTOR * (1 - expectedWinner);
+            const newLoserRating = loser.rating + ELO.K_FACTOR * (0 - expectedLoser);
+            return {
+                winner: Math.round(newWinnerRating),
+                loser: Math.round(newLoserRating),
+                winnerChange: Math.round(ELO.K_FACTOR * (1 - expectedWinner)),
+                loserChange: Math.round(ELO.K_FACTOR * (0 - expectedLoser))
+            };
+        }
+
+        // Yeni: Backend-ə reytinq göndərmək üçün funksiya
+        function updateBackend(image) {
+    fetch('http://localhost:3003/updateRating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            name: image.name, 
+            rating: image.rating, 
+            votes: image.votes,
+            category: image.category  // Kateqoriya da göndərilir
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log(data.message))
+    .catch(error => console.error('Xəta:', error));
+}
+
+
+
+        function voteForImage(imageId) {
+            const winner = images.find(img => img.id === imageId);
+            const loser = images.find(img => img.id === (imageId === currentPair[0].id ? currentPair[1].id : currentPair[0].id));
+            const newRatings = calculateNewRatings(winner, loser);
+            const oldWinnerRating = winner.rating;
+            const oldLoserRating = loser.rating;
+            winner.rating = newRatings.winner;
+            loser.rating = newRatings.loser;
+            winner.votes += 1;
+            totalVotes++;
+            document.getElementById('message').innerHTML = 
+                `✅ <strong>${winner.name}</strong> seçdiniz!<br>
+                 Ümumi səslər: ${totalVotes}`;
+            document.getElementById('rating-change-info').innerHTML = `
+                <span class="text-green-600">${winner.name}: +${newRatings.winnerChange} (${oldWinnerRating} → ${winner.rating})</span><br>
+                <span class="text-red-500">${loser.name}: ${newRatings.loserChange} (${oldLoserRating} → ${loser.rating})</span>
+            `;
+            
+            // Backendə yeni reytinqləri göndər
+            updateBackend(winner);
+            updateBackend(loser);
+            
+            updateAllLeaderboards();
+            
+            setTimeout(() => {
+                getRandomPair();
+                document.getElementById('message').textContent = 
+                    "İki şəkildən birini seçin. Daha çox seçilən qalib elan ediləcək!";
+                document.getElementById('rating-change-info').textContent = '';
+            }, 400);
+
+            let isFirstVote = false;
+            if (!localStorage.getItem('facemash_voted')) {
+                localStorage.setItem('facemash_voted', 'true');
+                isFirstVote = true;
+            }
+
+            fetch('http://localhost:3003/updateVote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isNewVoter: isFirstVote })  
+            })
+            .then(response => response.json())
+            .then(data => console.log(data.message))
+            .catch(error => console.error('Xəta:', error));
+        }
+        
+        function updateAllLeaderboards() {
+            updateLeaderboard('dizayn');
+            updateLeaderboard('maşın');
+            updateLeaderboard('qız');
+        }
+        
+        function updateLeaderboard(category) {
+            const filteredImages = images.filter(img => img.category === category);
+            const sortedImages = [...filteredImages].sort((a, b) => b.rating - a.rating);
+            const leaderboardList = document.getElementById(`${category}-leaderboard`);
+            leaderboardList.innerHTML = '';
+            if(sortedImages.length > 0) {
+                sortedImages.forEach((image, index) => {
+                    const li = document.createElement('li');
+                    li.className = "flex-shrink-0 snap-start flex flex-col items-center bg-gray-50 hover:bg-gray-100 transition-colors p-3 rounded-xl border border-gray-200 shadow-sm w-[130px] sm:w-[150px] relative";
+                    
+                    let medalHtml = '';
+                    if (index === 0) medalHtml = '<div class="absolute -top-3 -right-3 text-2xl drop-shadow-md z-10 bg-white rounded-full p-1 border border-yellow-300">🥇</div>';
+                    else if (index === 1) medalHtml = '<div class="absolute -top-3 -right-3 text-2xl drop-shadow-md z-10 bg-white rounded-full p-1 border border-gray-300">🥈</div>';
+                    else if (index === 2) medalHtml = '<div class="absolute -top-3 -right-3 text-2xl drop-shadow-md z-10 bg-white rounded-full p-1 border border-amber-600">🥉</div>';
+                    else medalHtml = `<div class="absolute top-1 left-2 text-xs font-bold text-gray-400 bg-white/80 px-1.5 py-0.5 rounded shadow-sm z-10 backdrop-blur-sm">#${index+1}</div>`;
+
+                    li.innerHTML = `
+                        ${medalHtml}
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md relative">
+                            <img src="${image.url}" alt="Foto" class="w-full h-full object-cover">
+                        </div>
+                        <div class="text-center w-full">
+                            <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1 truncate">${category}</div>
+                            <div class="text-blue-600 font-black text-lg sm:text-xl leading-none mb-1">${Math.round(image.rating)}</div>
+                            <div class="text-[10px] sm:text-xs text-slate-500 font-medium">${image.votes} Səs</div>
+                        </div>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.className = "py-2 text-sm md:text-base text-gray-500 italic border-b border-gray-50 last:border-0 flex justify-between";
+                li.textContent = "Hələ heç bir səs yoxdur";
+                leaderboardList.appendChild(li);
+            }
+        }
+
+        images.forEach(img => {
+            const testImg = new Image();
+            testImg.onerror = () => console.error("Şəkil yüklənmədi:", img.url);
+            testImg.src = img.url;
+        });
+    </script>
+</body>
+</html>
