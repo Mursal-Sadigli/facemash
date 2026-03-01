@@ -79,7 +79,7 @@
     <script>
         // Statistikaları yüklə
         function loadStatistics() {
-    fetch('http://localhost:3003/stats')
+    fetch('https://facemash-pjji.onrender.com/stats')
         .then(response => response.json())
         .then(stats => {
             document.getElementById('total-visitors').textContent = stats.totalVisitors;
@@ -99,7 +99,7 @@
         }
         
         function updateLeaderboard(category) {
-            fetch('http://localhost:3003/ratings')
+            fetch('https://facemash-pjji.onrender.com/ratings')
                 .then(res => res.json())
                 .then(data => {
                     let filteredImages = data.filter(img => img.category === category);
@@ -145,7 +145,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('facemash_visited')) {
                 localStorage.setItem('facemash_visited', 'true');
-                fetch('http://localhost:3003/updateVisitor', { method: 'POST' })
+                fetch('https://facemash-pjji.onrender.com/updateVisitor', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => console.log(data.message))
                     .catch(err => console.error(err));
