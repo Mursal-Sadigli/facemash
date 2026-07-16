@@ -110,7 +110,7 @@
             fetch('https://facemash-pjji.onrender.com/ratings')
               .then(response => response.json())
       .then(data => {
-         images = data.map(img => ({...img, id: img._id}));
+         images = data.map(img => ({...img, id: img.id}));
          if(images.length < 2) {
              document.getElementById('message').textContent = 'Şəkillər API-dən çəkilir... Zəhmət olmasa bir neçə saniyə sonra səhifəni yeniləyin.';
              return;
@@ -143,6 +143,10 @@
             }
             const availableImages = filteredImages.filter(img => !shownImages.includes(img.id));
             if(availableImages.length < 2) {
+                if(filteredImages.length < 2) {
+                    alert("Bu kategoride yeterli sayıda şəkil yok!");
+                    return;
+                }
                 shownImages = [];
                 getRandomPair();
                 return;

@@ -1,138 +1,181 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { neon } = require('@neondatabase/serverless');
 const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect('mongodb+srv://fullmursel2025_db_user:jjD65NDc14JIlBDg@cluster0.524owwq.mongodb.net/facemash?retryWrites=true&w=majority&appName=Cluster0')
-.then(async () => {
-    console.log("MongoDB-ə uğurla qoşuldu");
+// NeonDB bağlantısı
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_A2Z0GcrbiTUk@ep-plain-bonus-asojuitt-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require';
 
+const sql = neon(DATABASE_URL);
+
+// Cədvəlləri yarat (əgər mövcud deyilsə)
+async function initializeDatabase() {
     try {
-        const collections = await mongoose.connection.db.listCollections({name: 'images'}).toArray();
-        if (collections.length > 0) {
-            const indexes = await mongoose.connection.db.collection('images').indexes();
-            if (indexes.some(index => index.name === 'id_1')) {
-                await mongoose.connection.db.collection('images').dropIndex('id_1');
-                console.log("id_1 indeksi silindi.");
-            }
+        await sql`
+            CREATE TABLE IF NOT EXISTS images (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                url TEXT,
+                rating REAL DEFAULT 1200,
+                category TEXT NOT NULL,
+                votes INTEGER DEFAULT 0
+            )
+        `;
+
+        // name sütununa UNIQUE constraint əlavə et (əgər hələ yoxdursa)
+        await sql`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint WHERE conname = 'images_name_key'
+                ) THEN
+                    ALTER TABLE images ADD CONSTRAINT images_name_key UNIQUE (name);
+                END IF;
+            END $$
+        `;
+
+        await sql`
+            CREATE TABLE IF NOT EXISTS stats (
+                id SERIAL PRIMARY KEY,
+                total_visitors INTEGER DEFAULT 0,
+                total_votes INTEGER DEFAULT 0,
+                total_voters INTEGER DEFAULT 0
+            )
+        `;
+
+        // Stats cədvəlində ən azı bir sətir olsun
+        const existingStats = await sql`SELECT COUNT(*) as count FROM stats`;
+        if (parseInt(existingStats[0].count) === 0) {
+            await sql`INSERT INTO stats (total_visitors, total_votes, total_voters) VALUES (0, 0, 0)`;
         }
-    } catch(err) {
-        if(err.code !== 26) {
-            console.error("İndeks silinərkən xəta:", err);
-        }
+
+        console.log("NeonDB cədvəlləri uğurla yaradıldı/yoxlanıldı.");
+    } catch (err) {
+        console.error("Cədvəl yaradılarkən xəta:", err);
     }
-})
-.catch(err => console.error("MongoDB bağlantı xətası:", err));
+}
 
-const imageSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    url: { type: String },
-    rating: { type: Number, default: 1200 },
-    category: { type: String, required: true },
-    votes: { type: Number, default: 0 }
-});
+initializeDatabase();
 
-const Image = mongoose.model('Image', imageSchema);
-
-const statsSchema = new mongoose.Schema({
-    totalVisitors: { type: Number, default: 0 },
-    totalVotes: { type: Number, default: 0 },
-    totalVoters: { type: Number, default: 0 }
-});
-
-const Stats = mongoose.model('Stats', statsSchema);
-
-
+// GET /init - Dizayn şəkillərini əlavə et
 app.get('/init', async (req, res) => {
     try {
-        const count = await Image.countDocuments({ category: 'dizayn' });
-        if(count === 0) {
-            let images = [];
-            for(let i = 1; i <= 50; i++){
-                images.push({ name: `Design ${i}`, rating: 1200, category: 'dizayn', votes: 0 });
+        const result = await sql`SELECT COUNT(*) as count FROM images WHERE category = 'dizayn'`;
+        const count = parseInt(result[0].count);
+        if (count === 0) {
+            // 50 dizayn şəkli əlavə et
+            for (let i = 1; i <= 50; i++) {
+                await sql`INSERT INTO images (name, rating, category, votes) VALUES (${`Design ${i}`}, 1200, 'dizayn', 0)`;
             }
-            await Image.insertMany(images);
             return res.json({ message: 'Dizayn şəkilləri əlavə olundu.' });
         }
         res.json({ message: 'Dizayn şəkilləri artıq mövcuddur.' });
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
+// POST /updateVisitor - Ziyarətçi sayını artır
 app.post('/updateVisitor', async (req, res) => {
     try {
-        let stats = await Stats.findOne();
-        if (!stats) {
-            stats = new Stats();
-        }
-        stats.totalVisitors += 1;
-        await stats.save();
-        res.json({ message: 'Ziyarətçi sayı yeniləndi.', stats });
-    } catch(err) {
+        const result = await sql`
+            UPDATE stats SET total_visitors = total_visitors + 1
+            RETURNING *
+        `;
+        res.json({ message: 'Ziyarətçi sayı yeniləndi.', stats: result[0] });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
+// POST /updateVote - Səs statistikasını yenilə
 app.post('/updateVote', async (req, res) => {
-    const { isNewVoter } = req.body; 
+    const { isNewVoter } = req.body;
     try {
-        let stats = await Stats.findOne();
-        if (!stats) {
-            stats = new Stats();
-        }
-        stats.totalVotes += 1;
+        let result;
         if (isNewVoter) {
-            stats.totalVoters += 1;
+            result = await sql`
+                UPDATE stats SET total_votes = total_votes + 1, total_voters = total_voters + 1
+                RETURNING *
+            `;
+        } else {
+            result = await sql`
+                UPDATE stats SET total_votes = total_votes + 1
+                RETURNING *
+            `;
         }
-        await stats.save();
-        res.json({ message: 'Səs statistikası yeniləndi.', stats });
-    } catch(err) {
+        res.json({ message: 'Səs statistikası yeniləndi.', stats: result[0] });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
+// GET /stats - Statistikaları göstər
 app.get('/stats', async (req, res) => {
     try {
-        const stats = await Stats.findOne() || new Stats();
-        res.json(stats);
-    } catch(err) {
+        const result = await sql`SELECT * FROM stats LIMIT 1`;
+        if (result.length > 0) {
+            // Frontend-in gözlədiyi formata uyğunlaşdır (camelCase)
+            const stats = {
+                totalVisitors: result[0].total_visitors,
+                totalVotes: result[0].total_votes,
+                totalVoters: result[0].total_voters
+            };
+            res.json(stats);
+        } else {
+            res.json({ totalVisitors: 0, totalVotes: 0, totalVoters: 0 });
+        }
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-
+// POST /updateRating - Reytinqi yenilə və ya yeni şəkil yarat
 app.post('/updateRating', async (req, res) => {
     const { name, url, rating, votes, category } = req.body;
     if (!name || typeof rating !== 'number' || !category) {
         return res.status(400).json({ error: 'Yanlış məlumat göndərildi.' });
     }
     try {
-        let updateData = { rating, votes, category };
-        if (url) updateData.url = url;
-        
-        let image = await Image.findOneAndUpdate(
-            { name },
-            updateData,
-            { new: true }
-        );
-        if (!image) {
-            image = new Image({ name, url, rating, votes, category });
-            await image.save();
-            return res.json({ message: 'Şəkil yaradıldı və reytinq əlavə olundu.', image });
+        // UPSERT: varsa yenilə, yoxdursa yarat
+        let result;
+        if (url) {
+            result = await sql`
+                INSERT INTO images (name, url, rating, category, votes)
+                VALUES (${name}, ${url}, ${rating}, ${category}, ${votes || 0})
+                ON CONFLICT (name) DO UPDATE SET
+                    url = ${url},
+                    rating = ${rating},
+                    category = ${category},
+                    votes = ${votes || 0}
+                RETURNING *
+            `;
+        } else {
+            result = await sql`
+                INSERT INTO images (name, rating, category, votes)
+                VALUES (${name}, ${rating}, ${category}, ${votes || 0})
+                ON CONFLICT (name) DO UPDATE SET
+                    rating = ${rating},
+                    category = ${category},
+                    votes = ${votes || 0}
+                RETURNING *
+            `;
         }
-        res.json({ message: 'Reytinq yeniləndi.', image });
-    } catch(err) {
+        res.json({ message: 'Reytinq yeniləndi.', image: result[0] });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-
+// GET /ratings - Bütün şəkilləri göstər
 app.get('/ratings', async (req, res) => {
     try {
-        const images = await Image.find({});
+        const images = await sql`SELECT * FROM images`;
         res.json(images);
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
